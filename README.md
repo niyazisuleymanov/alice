@@ -13,5 +13,5 @@ go build
 
 - [ ] Sometimes tracker will not respond halting the whole peer request.
 - [ ] Maybe use announce URLs in announce-list to get more peers?
-- [ ] Too many handshaked fail. Is this a problem?
+- [ ] Too many handshakes fail. Is this a problem?
 - [ ] Magnet link support
