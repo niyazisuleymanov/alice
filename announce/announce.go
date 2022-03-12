@@ -29,7 +29,7 @@ type announce struct {
 	Peers    []byte // response
 }
 
-func New(infoHash, peerID [20]byte, connectionID []byte, left int) *announce {
+func New(infoHash, peerID [20]byte, left int, connectionID []byte) *announce {
 	return &announce{
 		ConnectionID:  connectionID,
 		Action:        1,
