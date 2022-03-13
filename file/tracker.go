@@ -60,7 +60,7 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 		return nil, err
 	}
 
-	connectBuf := make([]byte, 2048)
+	connectBuf := make([]byte, 16)
 	conn.ReadFromUDP(connectBuf)
 	connectRes := connect.Read(connectBuf)
 
@@ -102,7 +102,7 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 
 // Get list of peers from the announcer.
 func (tf *TorrentFile) requestPeers(peerID [20]byte) ([]peer.Peer, error) {
-	base, err := url.Parse(tf.Announce)
+	base, err := url.Parse("udp://tracker.opentrackr.org:1337/announce")
 	if err != nil {
 		return nil, err
 	}
