@@ -86,9 +86,6 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 		return nil, err
 	}
 	announceRes := announce.Read(announceBuf[:size])
-	if err != nil {
-		return nil, err
-	}
 
 	if !bytes.Equal(announceReq.TransactionID[:], announceRes.TransactionID[:]) {
 		err := fmt.Errorf("expected TID %s received %s", announceReq.TransactionID, announceRes.TransactionID)
