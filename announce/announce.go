@@ -81,11 +81,7 @@ func Read(buf []byte) *announce {
 	copy(leechersBuf, announceReq[12:16])
 	copy(seedersBuf, announceReq[16:20])
 
-	numLeechers := binary.BigEndian.Uint32(leechersBuf)
-	numSeeders := binary.BigEndian.Uint32(seedersBuf)
-	numPeers := numLeechers + numSeeders
-
-	peersBuf := make([]byte, numPeers*6)
+	peersBuf := make([]byte, len(buf)-20)
 	copy(peersBuf, buf[20:])
 
 	ar := announce{

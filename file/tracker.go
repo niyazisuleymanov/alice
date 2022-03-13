@@ -61,7 +61,7 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 	}
 
 	connectBuf := make([]byte, 16)
-	conn.ReadFromUDP(connectBuf)
+	conn.Read(connectBuf)
 	connectRes := connect.Read(connectBuf)
 
 	if !bytes.Equal(connectReq.TransactionID[:], connectRes.TransactionID[:]) {
@@ -81,8 +81,11 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 	}
 
 	announceBuf := make([]byte, 2048)
-	conn.ReadFromUDP(announceBuf)
-	announceRes := announce.Read(announceBuf)
+	size, err := conn.Read(announceBuf)
+	if err != nil {
+		return nil, err
+	}
+	announceRes := announce.Read(announceBuf[:size])
 	if err != nil {
 		return nil, err
 	}
