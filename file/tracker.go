@@ -102,7 +102,7 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 
 // Get list of peers from the announcer.
 func (tf *TorrentFile) requestPeers(peerID [20]byte) ([]peer.Peer, error) {
-	base, err := url.Parse("udp://tracker.opentrackr.org:1337/announce")
+	base, err := url.Parse(tf.Announce)
 	if err != nil {
 		return nil, err
 	}
