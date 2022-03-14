@@ -130,7 +130,6 @@ func checkIntegrity(d *download, buf []byte) error {
 func (t *Torrent) startDownloader(peer peer.Peer, downloadQueue chan *download, assembleQueue chan *assemble) {
 	ch, err := channel.New(peer, t.PeerID, t.InfoHash)
 	if err != nil {
-		log.Printf("Could not handshake with %s. Disconnecting...\n", peer.IP)
 		return
 	}
 	defer ch.Conn.Close()
