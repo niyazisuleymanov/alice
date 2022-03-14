@@ -64,7 +64,7 @@ func ReadHaveMessage(msg *Message) (int, error) {
 		return -1, fmt.Errorf("expected ID of %d (HAVE), got ID %d", Have, msg.ID)
 	}
 
-	if len(msg.Payload) != 3 {
+	if len(msg.Payload) != 4 {
 		return -1, fmt.Errorf("expected payload of length 4, got length %d", len(msg.Payload))
 	}
 
