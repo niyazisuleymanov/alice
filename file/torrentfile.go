@@ -33,7 +33,7 @@ type bencodeInfo struct {
 
 type bencodeTorrent struct {
 	Announce     string      `bencode:"announce"`
-	AnnounceList [][]string  `bencode:"announce-list"`
+	AnnounceList [][]string  `bencode:"announce-list,omitempty"`
 	Info         bencodeInfo `bencode:"info"`
 }
 
