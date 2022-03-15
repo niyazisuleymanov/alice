@@ -152,9 +152,16 @@ func (bto *bencodeTorrent) toTorrentFile() (*TorrentFile, error) {
 		return nil, err
 	}
 
+	var announceList []string
+	if bto.AnnounceList == nil {
+		announceList = nil
+	} else {
+		announceList = flattenAnnounceList(bto.AnnounceList)
+	}
+
 	tf := TorrentFile{
 		Announce:     bto.Announce,
-		AnnounceList: flattenAnnounceList(bto.AnnounceList),
+		AnnounceList: announceList,
 		InfoHash:     infoHash,
 		PieceHashes:  pieceHashes,
 		PieceLength:  bto.Info.PieceLength,

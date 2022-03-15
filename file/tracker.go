@@ -6,6 +6,7 @@ import (
 	"alice/peer"
 	"bytes"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -52,7 +53,8 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	conn.SetDeadline(time.Now().Add(5 * time.Second))
+	defer conn.SetDeadline(time.Time{})
 
 	connectReq := connect.New()
 	_, err = conn.Write(connectReq.Serialize())
@@ -61,7 +63,10 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 	}
 
 	connectBuf := make([]byte, 16)
-	conn.Read(connectBuf)
+	_, err = conn.Read(connectBuf)
+	if err != nil {
+		return nil, err
+	}
 	connectRes := connect.Read(connectBuf)
 
 	if !bytes.Equal(connectReq.TransactionID[:], connectRes.TransactionID[:]) {
@@ -102,34 +107,44 @@ func udpRequestPeers(url string, infoHash, peerID [20]byte, length int) ([]peer.
 
 // Get list of peers from the announcer.
 func (tf *TorrentFile) requestPeers(peerID [20]byte) ([]peer.Peer, error) {
-	base, err := url.Parse(tf.Announce)
-	if err != nil {
-		return nil, err
+	var announceList []string
+	if tf.AnnounceList == nil {
+		announceList = append(announceList, tf.Announce)
+	} else {
+		announceList = tf.AnnounceList
 	}
-
-	switch base.Scheme {
-	case "http", "https":
-		params := url.Values{
-			"info_hash":  []string{string(tf.InfoHash[:])},
-			"peer_id":    []string{string(peerID[:])},
-			"port":       []string{strconv.Itoa(0)},
-			"uploaded":   []string{"0"},
-			"downloaded": []string{"0"},
-			"compact":    []string{"1"},
-			"left":       []string{strconv.Itoa(tf.Length)},
-		}
-		base.RawQuery = params.Encode()
-		url := base.String()
-		return httpRequestPeers(url)
-	case "udp":
-		peers, err := udpRequestPeers(base.Host, tf.InfoHash, peerID, tf.Length)
+	for _, announce := range announceList {
+		log.Printf("Try connecting to: %s\n", announce)
+		base, err := url.Parse(announce)
 		if err != nil {
-			return nil, err
+			continue
 		}
-
-		return peers, nil
-	default:
-		err := fmt.Errorf("bad or unsupported url scheme")
-		return nil, err
+		switch base.Scheme {
+		case "http", "https":
+			params := url.Values{
+				"info_hash":  []string{string(tf.InfoHash[:])},
+				"peer_id":    []string{string(peerID[:])},
+				"port":       []string{strconv.Itoa(0)},
+				"uploaded":   []string{"0"},
+				"downloaded": []string{"0"},
+				"compact":    []string{"1"},
+				"left":       []string{strconv.Itoa(tf.Length)},
+			}
+			base.RawQuery = params.Encode()
+			url := base.String()
+			peers, err := httpRequestPeers(url)
+			if err != nil {
+				continue
+			}
+			return peers, nil
+		case "udp":
+			peers, err := udpRequestPeers(base.Host, tf.InfoHash, peerID, tf.Length)
+			if err != nil {
+				continue
+			}
+			return peers, nil
+		}
 	}
+	err := fmt.Errorf("no tracker was reached")
+	return nil, err
 }
