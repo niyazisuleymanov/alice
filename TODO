@@ -1,3 +1,4 @@
 * Multi-file support.
 * Magnet link support.
 * Reduce CPU usage.
+* Add adaptive pipeline depth.
