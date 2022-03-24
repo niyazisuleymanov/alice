@@ -1,8 +1,6 @@
-package file
+package alice
 
 import (
-	"alice/helper"
-	"alice/torrent"
 	"bytes"
 	"crypto/sha1"
 	"fmt"
@@ -43,42 +41,8 @@ type bencodeFileInfo struct {
 	PathUTF8 []string `bencode:"path.utf-8,omitempty"`
 }
 
-func (tf *TorrentFile) DownloadToFile(path string) error {
-	peerID := helper.GeneratePeerID()
-	peers, err := tf.requestPeers(peerID)
-	if err != nil {
-		return err
-	}
-
-	torrent := torrent.Torrent{
-		Peers:       peers,
-		InfoHash:    tf.InfoHash,
-		PieceHashes: tf.PieceHashes,
-		PieceLength: tf.PieceLength,
-		Length:      tf.Length,
-		Name:        tf.Name,
-	}
-
-	buf, err := torrent.Download()
-	if err != nil {
-		return err
-	}
-
-	outFile, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer outFile.Close()
-
-	_, err = outFile.Write(buf)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func Open(path string) (*TorrentFile, error) {
-	file, err := os.Open(path)
+func (t *Torrent) ParseTorrent() (*TorrentFile, error) {
+	file, err := os.Open(t.torrentPath)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +54,12 @@ func Open(path string) (*TorrentFile, error) {
 		return nil, err
 	}
 
-	return bto.toTorrentFile()
+	tf, err := bto.toTorrentFile()
+	if err != nil {
+		return nil, err
+	}
+	t.torrentFile = tf
+	return tf, nil
 }
 
 func (binfo *bencodeInfo) hash() ([20]byte, error) {

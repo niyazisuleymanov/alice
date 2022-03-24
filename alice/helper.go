@@ -1,11 +1,11 @@
-package helper
+package alice
 
 import (
 	"math/rand"
 	"time"
 )
 
-func GeneratePeerID() [20]byte {
+func generatePeerID() [20]byte {
 	rand.Seed(time.Now().UnixNano())
 	symbols := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 	peerID := [20]byte{}
@@ -15,7 +15,7 @@ func GeneratePeerID() [20]byte {
 	return peerID
 }
 
-func GenerateRandomID(size int) []byte {
+func generateRandomID(size int) []byte {
 	rand.Seed(time.Now().UnixNano())
 	symbols := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 	transactionID := make([]byte, size)

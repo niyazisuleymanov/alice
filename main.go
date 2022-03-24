@@ -1,7 +1,7 @@
 package main
 
 import (
-	"alice/file"
+	"alice/alice"
 	"log"
 	"os"
 )
@@ -10,13 +10,20 @@ func main() {
 	inputPath := os.Args[1]
 	outputPath := os.Args[2]
 
-	tf, err := file.Open(inputPath)
+	torrent := alice.NewTorrent(inputPath, outputPath)
+
+	log.Print("Parsing input")
+	_, err := torrent.ParseTorrent()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = tf.DownloadToFile(outputPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+	log.Print("Discovering peers")
+	torrent.DiscoverPeers()
+
+	log.Print("Starting download")
+	torrent.Download()
+
+	log.Print("Creating file(s)")
+	torrent.OutputToFile()
 }

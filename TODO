@@ -1,2 +1,3 @@
-Add DHT peer discovery and read new peers constantly.
-Magnet link support.
+* Multi-file support.
+* Magnet link support.
+* Reduce CPU usage.

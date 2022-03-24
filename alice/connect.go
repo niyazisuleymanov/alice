@@ -1,13 +1,12 @@
-package connect
+package alice
 
 import (
-	"alice/helper"
 	"encoding/binary"
 )
 
 const connectLen = 16
 
-type connect struct {
+type Connect struct {
 	ProtocolID    uint64 // request & response
 	Action        uint32 // request & response
 	TransactionID []byte // request & response
@@ -15,16 +14,16 @@ type connect struct {
 	ConnectionID []byte // response
 }
 
-func New() *connect {
-	transactionID := helper.GenerateRandomID(4)
-	return &connect{
+func newConnect() *Connect {
+	transactionID := generateRandomID(4)
+	return &Connect{
 		ProtocolID:    0x41727101980,
 		Action:        0,
 		TransactionID: transactionID,
 	}
 }
 
-func (c *connect) Serialize() []byte {
+func (c *Connect) serializeConnect() []byte {
 	buf := make([]byte, connectLen)
 	binary.BigEndian.PutUint64(buf[0:8], c.ProtocolID)
 	binary.BigEndian.PutUint32(buf[8:12], c.Action)
@@ -32,7 +31,7 @@ func (c *connect) Serialize() []byte {
 	return buf
 }
 
-func Read(buf []byte) *connect {
+func readConnect(buf []byte) *Connect {
 	connectRequest := make([]byte, connectLen)
 	copy(connectRequest, buf)
 
@@ -44,7 +43,7 @@ func Read(buf []byte) *connect {
 	copy(transactionIDBuf, connectRequest[4:8])
 	copy(connectionIDBuf, connectRequest[8:16])
 
-	cr := connect{
+	cr := Connect{
 		Action:        binary.BigEndian.Uint32(actionBuf),
 		TransactionID: transactionIDBuf[:],
 		ConnectionID:  connectionIDBuf[:],

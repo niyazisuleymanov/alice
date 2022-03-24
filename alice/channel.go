@@ -1,10 +1,6 @@
-package channel
+package alice
 
 import (
-	"alice/bitfield"
-	"alice/handshake"
-	"alice/message"
-	"alice/peer"
 	"bytes"
 	"fmt"
 	"net"
@@ -13,26 +9,26 @@ import (
 
 // Represents the communication channel between client and peer.
 type Channel struct {
-	Conn     net.Conn          // shared
-	Choked   bool              // shared
-	Bitfield bitfield.Bitfield // shared
-	peer     peer.Peer         // peer data
-	infoHash [20]byte          // client data
-	peerID   [20]byte          // client data
+	Conn     net.Conn // shared
+	Choked   bool     // shared
+	Bitfield Bitfield // shared
+	peer     Peer     // peer data
+	infoHash [20]byte // client data
+	peerID   [20]byte // client data
 }
 
 func completeHandshake(conn net.Conn, infoHash, peerID [20]byte) error {
 	conn.SetDeadline(time.Now().Add(5 * time.Second))
 	defer conn.SetDeadline(time.Time{})
 
-	request := handshake.New(infoHash, peerID) // initialize Handshake struct
-	_, err := conn.Write(request.Serialize())  // convert it to connection data
+	request := newHandshake(infoHash, peerID)          // initialize Handshake struct
+	_, err := conn.Write(request.serializeHandshake()) // convert it to connection data
 	if err != nil {
 		return err
 	}
 
 	// convert handshake response to Handshake struct
-	result, err := handshake.Read(conn)
+	result, err := readHandshake(conn)
 	if err != nil {
 		return err
 	}
@@ -47,11 +43,11 @@ func completeHandshake(conn net.Conn, infoHash, peerID [20]byte) error {
 }
 
 // Receive bitfield peer message right after successful handshake.
-func receiveBitfield(conn net.Conn) (bitfield.Bitfield, error) {
+func receiveBitfield(conn net.Conn) (Bitfield, error) {
 	conn.SetDeadline(time.Now().Add(5 * time.Second))
 	defer conn.SetDeadline(time.Time{})
 
-	msg, err := message.Read(conn)
+	msg, err := readMessage(conn)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +57,7 @@ func receiveBitfield(conn net.Conn) (bitfield.Bitfield, error) {
 		return nil, err
 	}
 
-	if msg.ID != message.Bitfield {
+	if msg.ID != bitfield {
 		err := fmt.Errorf("expected bitfield but got message ID %d", msg.ID)
 		return nil, err
 	}
@@ -70,7 +66,7 @@ func receiveBitfield(conn net.Conn) (bitfield.Bitfield, error) {
 }
 
 // Create a channel between client and peer.
-func New(peer peer.Peer, peerID, infoHash [20]byte) (*Channel, error) {
+func (t *Torrent) newChannel(peer Peer, peerID, infoHash [20]byte) (*Channel, error) {
 	conn, err := net.DialTimeout("tcp", peer.String(), 5*time.Second)
 	if err != nil {
 		return nil, err
@@ -88,6 +84,8 @@ func New(peer peer.Peer, peerID, infoHash [20]byte) (*Channel, error) {
 		return nil, err
 	}
 
+	t.activePeers++
+
 	return &Channel{
 		Conn:     conn,
 		Choked:   true,
@@ -98,37 +96,37 @@ func New(peer peer.Peer, peerID, infoHash [20]byte) (*Channel, error) {
 	}, nil
 }
 
-func (ch *Channel) Read() (*message.Message, error) {
-	msg, err := message.Read(ch.Conn)
+func (ch *Channel) read() (*Message, error) {
+	msg, err := readMessage(ch.Conn)
 	return msg, err
 }
 
-func (ch *Channel) SendRequest(index, begin, length int) error {
-	req := message.CreateRequestMessage(index, begin, length)
-	_, err := ch.Conn.Write(req.Serialize())
+func (ch *Channel) sendRequest(index, begin, length int) error {
+	req := createRequestMessage(index, begin, length)
+	_, err := ch.Conn.Write(req.serializeMessage())
 	return err
 }
 
-func (ch *Channel) SendInterested() error {
-	msg := message.Message{ID: message.Interested}
-	_, err := ch.Conn.Write(msg.Serialize())
+func (ch *Channel) sendInterested() error {
+	msg := Message{ID: interested}
+	_, err := ch.Conn.Write(msg.serializeMessage())
 	return err
 }
 
-func (ch *Channel) SendNotInterested() error {
-	msg := message.Message{ID: message.NotInterested}
-	_, err := ch.Conn.Write(msg.Serialize())
+func (ch *Channel) sendNotInterested() error {
+	msg := Message{ID: notInterested}
+	_, err := ch.Conn.Write(msg.serializeMessage())
 	return err
 }
 
-func (ch *Channel) SendUnchoke() error {
-	msg := message.Message{ID: message.Unchoke}
-	_, err := ch.Conn.Write(msg.Serialize())
+func (ch *Channel) sendUnchoke() error {
+	msg := Message{ID: unchoke}
+	_, err := ch.Conn.Write(msg.serializeMessage())
 	return err
 }
 
-func (ch *Channel) SendHave(index int) error {
-	msg := message.CreateHaveMessage(index)
-	_, err := ch.Conn.Write(msg.Serialize())
+func (ch *Channel) sendHave(index int) error {
+	msg := createHaveMessage(index)
+	_, err := ch.Conn.Write(msg.serializeMessage())
 	return err
 }

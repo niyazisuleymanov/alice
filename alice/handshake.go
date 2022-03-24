@@ -1,4 +1,4 @@
-package handshake
+package alice
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ type Handshake struct {
 const handshakeLen = 68
 
 // Create new Handshake struct with given infoHash and peerID.
-func New(infoHash, peerID [20]byte) *Handshake {
+func newHandshake(infoHash, peerID [20]byte) *Handshake {
 	return &Handshake{
 		Pstr:     "BitTorrent protocol",
 		InfoHash: infoHash,
@@ -30,7 +30,7 @@ func New(infoHash, peerID [20]byte) *Handshake {
 }
 
 // Put together a handshake string.
-func (h *Handshake) Serialize() []byte {
+func (h *Handshake) serializeHandshake() []byte {
 	buf := make([]byte, handshakeLen)
 	buf[0] = byte(len(h.Pstr)) // len of pstr string in hex
 	curr := 1
@@ -42,7 +42,7 @@ func (h *Handshake) Serialize() []byte {
 }
 
 // Convert raw handshake string into a Handshake struct
-func Read(r io.Reader) (*Handshake, error) {
+func readHandshake(r io.Reader) (*Handshake, error) {
 	pstrLenBuf := make([]byte, 1)
 	_, err := io.ReadFull(r, pstrLenBuf)
 	if err != nil {

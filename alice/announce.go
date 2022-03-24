@@ -1,13 +1,12 @@
-package announce
+package alice
 
 import (
-	"alice/helper"
 	"encoding/binary"
 )
 
 const announceLen = 98
 
-type announce struct {
+type Announce struct {
 	Action        uint32 // request & response
 	TransactionID []byte // request & response
 
@@ -29,11 +28,11 @@ type announce struct {
 	Peers    []byte // response
 }
 
-func New(infoHash, peerID [20]byte, left int, connectionID []byte) *announce {
-	return &announce{
+func newAnnounce(infoHash, peerID [20]byte, left int, connectionID []byte) *Announce {
+	return &Announce{
 		ConnectionID:  connectionID,
 		Action:        1,
-		TransactionID: helper.GenerateRandomID(4),
+		TransactionID: generateRandomID(4),
 		InfoHash:      infoHash,
 		PeerID:        peerID,
 		Downloaded:    0,
@@ -41,13 +40,13 @@ func New(infoHash, peerID [20]byte, left int, connectionID []byte) *announce {
 		Uploaded:      0,
 		Event:         0,
 		IP:            0,
-		Key:           helper.GenerateRandomID(4),
+		Key:           generateRandomID(4),
 		NumWant:       -1,
 		Port:          0,
 	}
 }
 
-func (a *announce) Serialize() []byte {
+func (a *Announce) serializeAnnounce() []byte {
 	buf := make([]byte, announceLen)
 	copy(buf[:8], a.ConnectionID[:])
 	binary.BigEndian.PutUint32(buf[8:12], a.Action)
@@ -65,7 +64,7 @@ func (a *announce) Serialize() []byte {
 	return buf
 }
 
-func Read(buf []byte) *announce {
+func readAnnounce(buf []byte) *Announce {
 	announceReq := make([]byte, 20)
 	copy(announceReq, buf[:20])
 
@@ -84,7 +83,7 @@ func Read(buf []byte) *announce {
 	peersBuf := make([]byte, len(buf)-20)
 	copy(peersBuf, buf[20:])
 
-	ar := announce{
+	ar := Announce{
 		Action:        binary.BigEndian.Uint32(actionBuf),
 		TransactionID: transactionIDBuf[:],
 		Interval:      binary.BigEndian.Uint32(intervalBuf),

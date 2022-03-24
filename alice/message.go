@@ -1,4 +1,4 @@
-package message
+package alice
 
 import (
 	"encoding/binary"
@@ -21,15 +21,15 @@ type messageID uint8
 //   - piece 7 (message payload of the form <index><begin><block> containing a piece)
 //   - cancel 8 (identical to request message used to cancel block requests)
 const (
-	Choke         messageID = 0
-	Unchoke       messageID = 1
-	Interested    messageID = 2
-	NotInterested messageID = 3
-	Have          messageID = 4
-	Bitfield      messageID = 5
-	Request       messageID = 6
-	Piece         messageID = 7
-	Cancel        messageID = 8
+	choke         messageID = 0
+	unchoke       messageID = 1
+	interested    messageID = 2
+	notInterested messageID = 3
+	have          messageID = 4
+	bitfield      messageID = 5
+	request       messageID = 6
+	piece         messageID = 7
+	cancel        messageID = 8
 )
 
 // Every message is of the following form:
@@ -41,27 +41,27 @@ type Message struct {
 	Payload []byte
 }
 
-func CreateRequestMessage(index, begin, length int) *Message {
+func createRequestMessage(index, begin, length int) *Message {
 	payload := make([]byte, 12)
 	binary.BigEndian.PutUint32(payload[0:4], uint32(index))
 	binary.BigEndian.PutUint32(payload[4:8], uint32(begin))
 	binary.BigEndian.PutUint32(payload[8:12], uint32(length))
-	return &Message{ID: Request, Payload: payload}
+	return &Message{ID: request, Payload: payload}
 }
 
 // Creates peer message with ID of 4 (HAVE).
 //
 // Format of the message: <length=5><id=4><payload>
-func CreateHaveMessage(index int) *Message {
+func createHaveMessage(index int) *Message {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload, uint32(index))
-	return &Message{ID: Have, Payload: payload}
+	return &Message{ID: have, Payload: payload}
 }
 
 // Extract payload (index) from raw HAVE message.
-func ReadHaveMessage(msg *Message) (int, error) {
-	if msg.ID != Have {
-		return -1, fmt.Errorf("expected ID of %d (HAVE), got ID %d", Have, msg.ID)
+func readHaveMessage(msg *Message) (int, error) {
+	if msg.ID != have {
+		return -1, fmt.Errorf("expected ID of %d (HAVE), got ID %d", have, msg.ID)
 	}
 
 	if len(msg.Payload) != 4 {
@@ -73,9 +73,9 @@ func ReadHaveMessage(msg *Message) (int, error) {
 }
 
 // Extract block from raw PIECE message into buf.
-func ReadPieceMessage(index int, buf []byte, msg *Message) (int, error) {
-	if msg.ID != Piece {
-		return 0, fmt.Errorf("expected ID of %d (PIECE), got ID %d", Piece, msg.ID)
+func readPieceMessage(index int, buf []byte, msg *Message) (int, error) {
+	if msg.ID != piece {
+		return 0, fmt.Errorf("expected ID of %d (PIECE), got ID %d", piece, msg.ID)
 	}
 
 	if len(msg.Payload) < 8 {
@@ -102,7 +102,7 @@ func ReadPieceMessage(index int, buf []byte, msg *Message) (int, error) {
 }
 
 // Put together a message.
-func (msg *Message) Serialize() []byte {
+func (msg *Message) serializeMessage() []byte {
 	// keepalive
 	if msg == nil {
 		return make([]byte, 4)
@@ -117,7 +117,7 @@ func (msg *Message) Serialize() []byte {
 }
 
 // Convert raw message into a Message struct.
-func Read(r io.Reader) (*Message, error) {
+func readMessage(r io.Reader) (*Message, error) {
 	bufLen := make([]byte, 4)
 	_, err := io.ReadFull(r, bufLen)
 	if err != nil {
@@ -149,23 +149,23 @@ func (msg *Message) name() string {
 		return "KeepAlive"
 	}
 	switch msg.ID {
-	case Choke:
+	case choke:
 		return "Choke"
-	case Unchoke:
+	case unchoke:
 		return "Unchoke"
-	case Interested:
+	case interested:
 		return "Interested"
-	case NotInterested:
+	case notInterested:
 		return "NotInterested"
-	case Have:
+	case have:
 		return "Have"
-	case Bitfield:
+	case bitfield:
 		return "Bitfield"
-	case Request:
+	case request:
 		return "Request"
-	case Piece:
+	case piece:
 		return "Piece"
-	case Cancel:
+	case cancel:
 		return "Cancel"
 	default:
 		return fmt.Sprintf("unknown message type with ID: %d", msg.ID)

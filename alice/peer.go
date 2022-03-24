@@ -1,10 +1,11 @@
-package peer
+package alice
 
 import (
 	"encoding/binary"
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 )
 
 type Peer struct {
@@ -40,4 +41,13 @@ func Unmarshal(peersBinary []byte) ([]Peer, error) {
 // Return Peer ip and port with suitable format - ip:port
 func (p Peer) String() string {
 	return net.JoinHostPort(p.IP.String(), strconv.Itoa(int(p.Port)))
+}
+
+func toPeer(peer string) Peer {
+	addr := strings.Split(peer, ":")
+	port, _ := strconv.Atoi(addr[1])
+	return Peer{
+		IP:   net.ParseIP(addr[0]),
+		Port: uint16(port),
+	}
 }
