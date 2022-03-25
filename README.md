@@ -24,4 +24,21 @@ an example.
 
 Configuration (config.go) options will expand. For now, it only
 monitors whether download progress should output to 
-stdout, and configuration of tracker/DHT support.
+stdout, and configuration of tracker/DHT peer discovery support.
+
+Default configuration is used if no custom configuration is provided. To
+provide a custom configuration use `NewConfig` API.
+
+```
+alice.NewConfig({...}) // provide custom Config struct
+```
+
+Alternatively, individual fields can be altered by modifying `DefaultConfig`.
+
+```
+config := alice.DefaultConfig
+// change config fields
+alice.NewConfig(config)
+```
+
+**NOTE**: custom configuration should be provided before using any other API.
