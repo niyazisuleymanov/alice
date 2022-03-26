@@ -1,4 +1,5 @@
 * Multi-file support.
 * Magnet link support.
+* Add tests.
 * Reduce CPU usage.
 * Add adaptive pipeline depth.
