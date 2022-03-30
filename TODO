@@ -2,4 +2,5 @@
 * Magnet link support.
 * Add tests.
 * Reduce CPU usage.
+* Better error handle.
 * Add adaptive pipeline depth.
